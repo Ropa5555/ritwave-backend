@@ -16,30 +16,35 @@ app.get("/", (req, res) => {
   res.send("🎵 Welcome to Ritwave Backend (YouTube Version)");
 });
 
-// ✅ Song search route (YouTube fallback)
+// ✅ 🔁 Fixed YouTube Search API route
 app.get("/api/search", async (req, res) => {
   const query = req.query.q;
   if (!query) return res.status(400).json({ error: "Missing query" });
 
   try {
     const response = await axios.get(
-      `https://yt-api.p.rapidapi.com/search`,
+      'https://youtube-search-and-download.p.rapidapi.com/search',
       {
-        params: { query, type: "music" },
+        params: { query, type: "v" },
         headers: {
-          "X-RapidAPI-Key": "your-rapidapi-key-here", // Replace with your key
-          "X-RapidAPI-Host": "yt-api.p.rapidapi.com",
-        },
+          'X-RapidAPI-Key': 'd605846129mshe55f3548c262bd6p19151bjsn336b5c04e938',
+          'X-RapidAPI-Host': 'youtube-search-and-download.p.rapidapi.com'
+        }
       }
     );
 
-    const results = response.data.data.map((item) => ({
-      title: item.title,
-      artist: item.channelTitle,
-      videoId: item.videoId,
-      thumbnail: item.thumbnail[0]?.url,
-      url: `https://www.youtube.com/watch?v=${item.videoId}`,
-    }));
+    const results = response.data.contents
+      .filter(item => item.video)
+      .map(item => {
+        const video = item.video;
+        return {
+          title: video.title,
+          artist: video.channelName,
+          videoId: video.videoId,
+          thumbnail: video.thumbnails[0]?.url,
+          url: `https://www.youtube.com/watch?v=${video.videoId}`
+        };
+      });
 
     res.json(results);
   } catch (error) {
